@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { getStudentById } from '../../lib/data';
 import { notFound } from 'next/navigation';
 
+// Force dynamic rendering to prevent static generation
+export const dynamic = 'force-dynamic';
+
 export default async function StudentDetailPage({ params }) {
   const { id } = await params;
   const student = await getStudentById(id);
@@ -35,7 +38,7 @@ export default async function StudentDetailPage({ params }) {
           {/* Header */}
           <div className="bg-blue-600 text-white px-6 py-4">
             <h1 className="text-2xl font-bold">{student.name}</h1>
-            <p className="text-blue-100">{student.major} • {student.year}</p>
+            <p className="text-blue-100">{student.course}</p>
           </div>
 
           {/* Content */}
@@ -43,29 +46,21 @@ export default async function StudentDetailPage({ params }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Personal Information */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Student Information</h2>
                 <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Student ID</label>
+                    <p className="text-gray-900">#{student.id}</p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Full Name</label>
                     <p className="text-gray-900">{student.name}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Age</label>
-                    <p className="text-gray-900">{student.age} years old</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Email</label>
                     <p className="text-gray-900">
                       <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800">
                         {student.email}
-                      </a>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
-                    <p className="text-gray-900">
-                      <a href={`tel:${student.phone}`} className="text-blue-600 hover:text-blue-800">
-                        {student.phone}
                       </a>
                     </p>
                   </div>
@@ -77,37 +72,19 @@ export default async function StudentDetailPage({ params }) {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Academic Information</h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Major</label>
-                    <p className="text-gray-900">{student.major}</p>
+                    <label className="block text-sm font-medium text-gray-700">Course</label>
+                    <p className="text-gray-900">{student.course}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Academic Year</label>
-                    <p className="text-gray-900">{student.year}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">GPA</label>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
                     <p className="text-gray-900">
-                      <span className={`font-semibold ${
-                        student.gpa >= 3.7 ? 'text-green-600' : 
-                        student.gpa >= 3.0 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
-                        {student.gpa}
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Active Student
                       </span>
-                      <span className="text-gray-500 ml-1">/ 4.0</span>
                     </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Student ID</label>
-                    <p className="text-gray-900">#{student.id.padStart(6, '0')}</p>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Address */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Address</h2>
-              <p className="text-gray-900">{student.address}</p>
             </div>
 
             {/* Actions */}

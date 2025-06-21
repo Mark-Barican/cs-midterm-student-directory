@@ -1,92 +1,132 @@
-// Mock student data - In a real application, this would come from PostgreSQL
-const mockStudents = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    email: 'alice.johnson@university.edu',
-    age: 20,
-    major: 'Computer Science',
-    year: 'Sophomore',
-    gpa: 3.8,
-    phone: '555-0101',
-    address: '123 Campus Drive, University City, UC 12345'
-  },
-  {
-    id: '2',
-    name: 'Bob Smith',
-    email: 'bob.smith@university.edu',
-    age: 22,
-    major: 'Mathematics',
-    year: 'Senior',
-    gpa: 3.6,
-    phone: '555-0102',
-    address: '456 College Ave, University City, UC 12345'
-  },
-  {
-    id: '3',
-    name: 'Carol Davis',
-    email: 'carol.davis@university.edu',
-    age: 19,
-    major: 'Biology',
-    year: 'Freshman',
-    gpa: 3.9,
-    phone: '555-0103',
-    address: '789 Student Lane, University City, UC 12345'
-  },
-  {
-    id: '4',
-    name: 'David Wilson',
-    email: 'david.wilson@university.edu',
-    age: 21,
-    major: 'Engineering',
-    year: 'Junior',
-    gpa: 3.7,
-    phone: '555-0104',
-    address: '321 Academic St, University City, UC 12345'
-  },
-  {
-    id: '5',
-    name: 'Emma Brown',
-    email: 'emma.brown@university.edu',
-    age: 20,
-    major: 'Psychology',
-    year: 'Sophomore',
-    gpa: 3.5,
-    phone: '555-0105',
-    address: '654 Learning Blvd, University City, UC 12345'
-  },
-  {
-    id: '6',
-    name: 'Frank Miller',
-    email: 'frank.miller@university.edu',
-    age: 23,
-    major: 'Business Administration',
-    year: 'Senior',
-    gpa: 3.4,
-    phone: '555-0106',
-    address: '987 Education Way, University City, UC 12345'
-  }
-];
+import { Client } from 'pg';
 
-// Simulate database operations
-export async function getAllStudents() {
-  // In a real application, this would be a PostgreSQL query:
-  // const result = await client.query('SELECT * FROM students ORDER BY name');
-  // return result.rows;
+// Database connection configuration
+let client = null;
+let isConnected = false;
+
+function createClient() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
   
-  // Simulate async operation
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return mockStudents;
+  return new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
 }
 
-export async function getStudentById(id) {
-  // In a real application, this would be a PostgreSQL query:
-  // const result = await client.query('SELECT * FROM students WHERE id = $1', [id]);
-  // return result.rows[0];
+// Initialize database connection
+async function connectToDatabase() {
+  if (!isConnected) {
+    try {
+      if (!client) {
+        client = createClient();
+      }
+      await client.connect();
+      isConnected = true;
+      console.log('Connected to PostgreSQL database');
+    } catch (error) {
+      console.error('Error connecting to database:', error);
+      throw error;
+    }
+  }
+}
+
+// Create students table if it doesn't exist
+export async function createStudentsTable() {
+  await connectToDatabase();
   
-  // Simulate async operation
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return mockStudents.find(student => student.id === id);
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS students (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      course TEXT NOT NULL
+    );
+  `;
+  
+  try {
+    await client.query(createTableQuery);
+    console.log('Students table created or already exists');
+  } catch (error) {
+    console.error('Error creating students table:', error);
+    throw error;
+  }
+}
+
+// Insert sample data
+export async function insertSampleData() {
+  await connectToDatabase();
+  
+  // First check if data already exists
+  const checkQuery = 'SELECT COUNT(*) FROM students';
+  const result = await client.query(checkQuery);
+  
+  if (parseInt(result.rows[0].count) > 0) {
+    console.log('Sample data already exists');
+    return;
+  }
+  
+  const insertQuery = `
+    INSERT INTO students (name, email, course) VALUES
+    ('Alice Johnson', 'alice.johnson@university.edu', 'Computer Science'),
+    ('Bob Smith', 'bob.smith@university.edu', 'Mathematics'),
+    ('Carol Davis', 'carol.davis@university.edu', 'Biology'),
+    ('David Wilson', 'david.wilson@university.edu', 'Engineering'),
+    ('Emma Brown', 'emma.brown@university.edu', 'Psychology'),
+    ('Frank Miller', 'frank.miller@university.edu', 'Business Administration')
+  `;
+  
+  try {
+    await client.query(insertQuery);
+    console.log('Sample data inserted successfully');
+  } catch (error) {
+    console.error('Error inserting sample data:', error);
+    throw error;
+  }
+}
+
+// Get all students
+export async function getAllStudents() {
+  await connectToDatabase();
+  
+  const query = 'SELECT * FROM students ORDER BY name';
+  
+  try {
+    const result = await client.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching all students:', error);
+    throw error;
+  }
+}
+
+// Get student by ID
+export async function getStudentById(id) {
+  await connectToDatabase();
+  
+  const query = 'SELECT * FROM students WHERE id = $1';
+  
+  try {
+    const result = await client.query(query, [id]);
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error fetching student by ID:', error);
+    throw error;
+  }
+}
+
+// Initialize database (create table and insert sample data)
+export async function initializeDatabase() {
+  try {
+    await createStudentsTable();
+    await insertSampleData();
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
+  }
 }
 
 // Example PostgreSQL connection setup (commented out for demo)

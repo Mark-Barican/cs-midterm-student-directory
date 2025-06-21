@@ -1,7 +1,13 @@
 import Link from 'next/link';
-import { getAllStudents } from '../lib/data';
+import { getAllStudents, initializeDatabase } from '../lib/data';
+
+// Force dynamic rendering to prevent static generation
+export const dynamic = 'force-dynamic';
 
 export default async function StudentsPage() {
+  // Initialize database on first load
+  await initializeDatabase();
+  
   const students = await getAllStudents();
 
   return (
@@ -31,22 +37,19 @@ export default async function StudentsPage() {
                 <div className="flex-grow">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{student.name}</h3>
                   <p className="text-gray-600 mb-1">
-                    <span className="font-medium">Major:</span> {student.major}
-                  </p>
-                  <p className="text-gray-600 mb-1">
-                    <span className="font-medium">Year:</span> {student.year}
-                  </p>
-                  <p className="text-gray-600 mb-1">
-                    <span className="font-medium">GPA:</span> {student.gpa}
+                    <span className="font-medium">Course:</span> {student.course}
                   </p>
                   <p className="text-gray-600 mb-4">
                     <span className="font-medium">Email:</span> {student.email}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    <span className="font-medium">Student ID:</span> #{student.id}
                   </p>
                 </div>
                 
                 <Link 
                   href={`/students/${student.id}`}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center inline-block"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center inline-block mt-4"
                 >
                   View Details
                 </Link>
